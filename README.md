@@ -1,87 +1,56 @@
-# EventSourceGen
+# StateleSSE.CodeGen.TypeScript
 
-**Generate TypeScript EventSource clients from OpenAPI specifications with C# attributes.**
-
-## Features
-
-- ✅ **[EventSourceEndpoint] Attribute** - Explicitly mark SSE endpoints
-- ✅ **TypeScript Code Generation** - Auto-generate typed EventSource functions
-- ✅ **OpenAPI Extension** - Adds `x-event-source` and `x-event-type` to spec
-- ✅ **Single Source of Truth** - Types and URLs from your C# controllers
-- ✅ **Zero Magic Strings** - No hardcoded namespaces or naming conventions
-- ✅ **Project Agnostic** - Works with any ASP.NET Core project
-
----
+Generate TypeScript EventSource clients from OpenAPI specifications with C# attributes. Part of the StateleSSE ecosystem for type-safe, stateless SSE architectures.
 
 ## Installation
 
-### Option 1: Local Project Reference (Development)
-
 ```bash
-dotnet add reference /path/to/EventSourceGen/EventSourceGen.csproj
+dotnet add package StateleSSE.CodeGen.TypeScript
 ```
 
-### Option 2: NuGet Package (Production)
+## Features
 
-```bash
-# First, pack the project
-cd EventSourceGen
-dotnet pack -c Release
+- ✅ **[EventSourceEndpoint] Attribute** - Explicitly mark SSE endpoints in C#
+- ✅ **TypeScript Code Generation** - Auto-generate typed EventSource functions
+- ✅ **OpenAPI Extension** - Adds `x-event-source` and `x-event-type` metadata
+- ✅ **Single Source of Truth** - Types and URLs derived from C# controllers
+- ✅ **Zero Magic Strings** - No hardcoded namespaces or conventions
+- ✅ **Framework Agnostic** - Works with any ASP.NET Core project
 
-# Then install from local
-dotnet add package EventSourceGen --source ./bin/Release
-```
+## Quick Start
 
-### Option 3: Publish to NuGet.org
-
-```bash
-dotnet pack -c Release
-dotnet nuget push bin/Release/EventSourceGen.1.0.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
-```
-
-Then:
-```bash
-dotnet add package EventSourceGen
-```
-
----
-
-## Usage
-
-### Step 1: Mark SSE Endpoints with Attribute
+### 1. Mark SSE Endpoints
 
 ```csharp
-using EventSourceGen;
+using StateleSSE.CodeGen.TypeScript;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 public class GameEventsController : ControllerBase
 {
-    [HttpGet("round-started")]
-    [EventSourceEndpoint(typeof(RoundStartedEvent))]  // ← Add this!
-    public async Task StreamRoundStarted([FromQuery] string gameId)
+    [HttpGet("events/player-joined")]
+    [EventSourceEndpoint(typeof(PlayerJoinedEvent))]  // ← Mark SSE endpoint
+    public async Task StreamPlayerJoined([FromQuery] string gameId)
     {
-        Response.Headers.Append("Content-Type", "text/event-stream");
         // ... SSE implementation
     }
 }
 ```
 
-### Step 2: Call Generator in Program.cs
-
-**Add right after NSwag TypeScript generation:**
+### 2. Generate TypeScript Client
 
 ```csharp
-using EventSourceGen;
+using StateleSSE.CodeGen.TypeScript;
 
+// In Program.cs, after NSwag generation
 var app = builder.Build();
 
-// Your existing NSwag generation
+// Generate OpenAPI spec
 app.GenerateApiClientsFromOpenApi("/../../client/src/generated-client.ts")
    .GetAwaiter()
    .GetResult();
 
-// Add EventSource generation right here!
+// Generate EventSource clients
 TypeScriptSseGenerator.Generate(
     openApiSpecPath: Path.Combine(Directory.GetCurrentDirectory(), "openapi-with-docs.json"),
     outputPath: Path.Combine(Directory.GetCurrentDirectory(), "../../client/src/generated-sse-client.ts")
@@ -90,28 +59,27 @@ TypeScriptSseGenerator.Generate(
 await app.RunAsync();
 ```
 
-### Step 3: Use in TypeScript
+### 3. Use in TypeScript
 
 ```typescript
-import { streamRoundStarted } from './generated-sse-client';
-import type { RoundStartedEvent } from './generated-client';
+import { streamPlayerJoined } from './generated-sse-client';
+import type { PlayerJoinedEvent } from './generated-client';
 
-const es = streamRoundStarted('game-123');
+const es = streamPlayerJoined('game-123');
 es.onmessage = (e) => {
-    const event: RoundStartedEvent = JSON.parse(e.data);
-    console.log(event.questionText);
+    const event: PlayerJoinedEvent = JSON.parse(e.data);
+    console.log('Player joined:', event.playerName);
 };
 ```
 
----
+## OpenAPI Integration
 
-## Integration with NSwag
-
-To add OpenAPI extensions (`x-event-source`, `x-event-type`), register the operation processor:
+To add `x-event-source` and `x-event-type` extensions to OpenAPI spec, register the operation processor:
 
 ```csharp
-// In your Swagger/NSwag configuration (usually Etc/SwaggerExtensions.cs)
-using EventSourceGen;
+using StateleSSE.CodeGen.TypeScript;
+using NSwag.Generation.Processors;
+using NSwag.Generation.Processors.Contexts;
 
 public sealed class EventSourceEndpointOperationProcessor : IOperationProcessor
 {
@@ -135,8 +103,6 @@ services.AddOpenApiDocument(conf =>
 });
 ```
 
----
-
 ## API Reference
 
 ### EventSourceEndpointAttribute
@@ -146,59 +112,59 @@ services.AddOpenApiDocument(conf =>
 public sealed class EventSourceEndpointAttribute : Attribute
 {
     public Type EventType { get; }
-
     public EventSourceEndpointAttribute(Type eventType);
 }
 ```
 
 **Parameters:**
-- `eventType` - The event DTO type this endpoint streams (e.g., `typeof(RoundStartedEvent)`)
+- `eventType` - The event DTO type this endpoint streams
 
 **Example:**
 ```csharp
 [EventSourceEndpoint(typeof(RoundStartedEvent))]
+public async Task StreamRoundStarted([FromQuery] string gameId) { }
 ```
 
-### TypeScriptSseGenerator
+### TypeScriptSseGenerator.Generate()
 
 ```csharp
-public static class TypeScriptSseGenerator
-{
-    public static void Generate(
-        string openApiSpecPath,
-        string outputPath,
-        string baseUrlImport = "./utils/BASE_URL",
-        string clientImport = "./generated-client"
-    );
-}
+public static void Generate(
+    string openApiSpecPath,
+    string outputPath,
+    string baseUrlImport = "./utils/BASE_URL",
+    string clientImport = "./generated-client"
+)
 ```
 
 **Parameters:**
-- `openApiSpecPath` - Path to OpenAPI JSON file (e.g., `"openapi-with-docs.json"`)
+- `openApiSpecPath` - Path to OpenAPI JSON file
 - `outputPath` - Output path for generated TypeScript file
-- `baseUrlImport` - Import path for BASE_URL (default: `"./utils/BASE_URL"`)
+- `baseUrlImport` - Import path for BASE_URL constant (default: `"./utils/BASE_URL"`)
 - `clientImport` - Import path for generated client types (default: `"./generated-client"`)
 
 **Example:**
 ```csharp
 TypeScriptSseGenerator.Generate(
     openApiSpecPath: "openapi-with-docs.json",
-    outputPath: "../../client/src/generated-sse-client.ts"
+    outputPath: "../../client/src/generated-sse-client.ts",
+    baseUrlImport: "@/config/api",
+    clientImport: "@/api/client"
 );
 ```
 
----
-
-## Generated Output Example
+## Generated Output
 
 **Input (C#):**
 ```csharp
 [EventSourceEndpoint(typeof(RoundStartedEvent))]
-public async Task StreamRoundStarted([FromQuery] string gameId)
+public async Task StreamRoundStarted([FromQuery] string gameId) { }
 ```
 
 **Output (TypeScript):**
 ```typescript
+import { BASE_URL } from './utils/BASE_URL';
+import type { RoundStartedEvent } from './generated-client';
+
 /**
  * Subscribe to RoundStartedEvent events
  * @param gameid - gameId
@@ -206,20 +172,76 @@ public async Task StreamRoundStarted([FromQuery] string gameId)
  */
 export function streamRoundStarted(gameid: string): EventSource {
     const queryParams = new URLSearchParams({ gameid });
-    const url = `${BASE_URL}/RoundStartedEvent?${queryParams}`;
+    const url = `${BASE_URL}/events/round-started?${queryParams}`;
     return new EventSource(url);
 }
 
+/**
+ * Helper for creating typed EventSource streams with callbacks
+ */
 export function createTypedEventStream<T>(
     url: string,
     onMessage: (event: T) => void,
     onError?: (error: Event) => void
 ): EventSource {
-    // ... helper implementation
+    const es = new EventSource(url);
+    es.onmessage = (e) => onMessage(JSON.parse(e.data));
+    if (onError) es.onerror = onError;
+    return es;
 }
 ```
 
----
+## Complete Example
+
+**C# Controller:**
+```csharp
+using StateleSSE.CodeGen.TypeScript;
+using StateleSSE.AspNetCore;
+using StateleSSE.Abstractions;
+
+[ApiController]
+public class GameEventsController(ISseBackplane backplane) : ControllerBase
+{
+    [HttpGet("events/player-joined")]
+    [EventSourceEndpoint(typeof(PlayerJoinedEvent))]
+    public async Task StreamPlayerJoined([FromQuery] string gameId)
+    {
+        var channel = ChannelNamingExtensions.Channel<PlayerJoinedEvent>("game", gameId);
+        await HttpContext.StreamSseAsync<PlayerJoinedEvent>(backplane, channel);
+    }
+
+    [HttpGet("events/round-started")]
+    [EventSourceEndpoint(typeof(RoundStartedEvent))]
+    public async Task StreamRoundStarted([FromQuery] string gameId)
+    {
+        var channel = ChannelNamingExtensions.Channel<RoundStartedEvent>("game", gameId);
+        await HttpContext.StreamSseAsync<RoundStartedEvent>(backplane, channel);
+    }
+}
+
+public record PlayerJoinedEvent(string GameId, string PlayerName, DateTime JoinedAt);
+public record RoundStartedEvent(string GameId, int RoundNumber, string Question);
+```
+
+**TypeScript Client:**
+```typescript
+import { streamPlayerJoined, streamRoundStarted } from './generated-sse-client';
+import type { PlayerJoinedEvent, RoundStartedEvent } from './generated-client';
+
+// Subscribe to player joined events
+const playerEs = streamPlayerJoined('game-123');
+playerEs.onmessage = (e) => {
+    const event: PlayerJoinedEvent = JSON.parse(e.data);
+    console.log(`${event.playerName} joined at ${event.joinedAt}`);
+};
+
+// Subscribe to round started events
+const roundEs = streamRoundStarted('game-123');
+roundEs.onmessage = (e) => {
+    const event: RoundStartedEvent = JSON.parse(e.data);
+    console.log(`Round ${event.roundNumber}: ${event.question}`);
+};
+```
 
 ## How It Works
 
@@ -228,96 +250,92 @@ export function createTypedEventStream<T>(
         ↓
 NSwag Operation Processor
         ↓
-x-event-source: true in OpenAPI
+OpenAPI: x-event-source: true
+         x-event-type: "EventType"
         ↓
 TypeScriptSseGenerator.Generate()
         ↓
 generated-sse-client.ts
 ```
 
-1. You mark endpoints with `[EventSourceEndpoint]`
-2. NSwag operation processor adds `x-event-source: true` to OpenAPI
-3. `TypeScriptSseGenerator.Generate()` reads OpenAPI and finds marked endpoints
-4. TypeScript EventSource functions generated
+1. Mark endpoints with `[EventSourceEndpoint]`
+2. NSwag operation processor adds `x-event-source` metadata to OpenAPI
+3. `TypeScriptSseGenerator.Generate()` reads OpenAPI and generates TypeScript functions
+4. Client imports and uses typed EventSource functions
 
----
+## Benefits Over Manual Approach
 
-## Comparison: Before vs After
+| Before (Manual) | After (StateleSSE.CodeGen.TypeScript) |
+|-----------------|--------------------------------------|
+| Hardcoded URLs in TypeScript | Generated from C# routes |
+| Duplicate type definitions | Shared from NSwag-generated types |
+| Manual sync between C# and TS | Single source of truth |
+| No compile-time safety | Full TypeScript typing |
+| Separate Node.js build step | Inline with .NET build |
 
-### Before (Node.js Script)
+## Integration with StateleSSE Ecosystem
 
 ```bash
-# Separate Node.js dependency
-npm install
-npm run generate:sse
+# Full stack setup
+dotnet add package StateleSSE.Abstractions
+dotnet add package StateleSSE.Backplane.Redis
+dotnet add package StateleSSE.AspNetCore
+dotnet add package StateleSSE.CodeGen.TypeScript
 ```
 
-### After (.NET NuGet Package)
+**Workflow:**
+1. Define event DTOs in C#
+2. Mark SSE endpoints with `[EventSourceEndpoint]`
+3. Use `StateleSSE.AspNetCore` extension methods for zero-boilerplate endpoints
+4. Generate TypeScript clients with `TypeScriptSseGenerator.Generate()`
+5. Consume strongly-typed EventSource functions in frontend
 
-```csharp
-// Single .NET toolchain
-TypeScriptSseGenerator.Generate(
-    "openapi-with-docs.json",
-    "../../client/src/generated-sse-client.ts"
-);
-```
+## Custom Configuration
 
-**Benefits:**
-- ✅ No Node.js dependency
-- ✅ Single command (`dotnet run`)
-- ✅ Runs inline with NSwag generation
-- ✅ Same tooling as rest of project
-
----
-
-## Advanced Configuration
-
-### Custom Import Paths
+### Custom BASE_URL Import
 
 ```csharp
 TypeScriptSseGenerator.Generate(
     openApiSpecPath: "openapi.json",
     outputPath: "output.ts",
-    baseUrlImport: "@/config/api",      // Custom BASE_URL import
-    clientImport: "@/api/generated"      // Custom client types import
+    baseUrlImport: "@/config/api"  // Custom import path
 );
 ```
 
-### Multiple Event Types per Endpoint
-
-If your endpoint streams multiple event types (not recommended), you can still use the attribute with the primary type:
-
-```csharp
-[EventSourceEndpoint(typeof(GameEvent))]  // Primary/union type
-public async Task StreamAllGameEvents([FromQuery] string gameId)
+Generated imports:
+```typescript
+import { BASE_URL } from '@/config/api';
 ```
 
----
+### Custom Client Types Import
+
+```csharp
+TypeScriptSseGenerator.Generate(
+    openApiSpecPath: "openapi.json",
+    outputPath: "output.ts",
+    clientImport: "@/api/types"  // Custom import path
+);
+```
+
+Generated imports:
+```typescript
+import type { PlayerJoinedEvent } from '@/api/types';
+```
 
 ## Requirements
 
-- .NET 9.0+
+- .NET 6.0+
 - ASP.NET Core
 - NSwag (for OpenAPI generation)
 
----
+## Related Packages
+
+| Package | Purpose |
+|---------|---------|
+| `StateleSSE.Abstractions` | Core `ISseBackplane` interface |
+| `StateleSSE.Backplane.Redis` | Redis backplane for horizontal scaling |
+| `StateleSSE.AspNetCore` | Extension methods for SSE endpoints |
 
 ## License
 
 MIT
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
----
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
