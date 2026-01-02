@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace EventSourceGen;
+namespace StateleSSE.CodeGen.TypeScript;
 
 /// <summary>
 /// Generates TypeScript EventSource client code from OpenAPI specification

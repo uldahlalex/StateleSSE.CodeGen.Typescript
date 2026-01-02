@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>StateleSSE.CodeGen.TypeScript</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Alex</Authors>
+    <Description>TypeScript EventSource client generator for StateleSSE. Generates type-safe clients from OpenAPI specs with [EventSourceEndpoint] attributes.</Description>
+    <PackageTags>eventsource;sse;openapi;typescript;codegen;stateless;code-generation</PackageTags>
+    <RepositoryUrl>https://github.com/yourusername/StateleSSE</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RootNamespace>StateleSSE.CodeGen.TypeScript</RootNamespace>
+  </PropertyGroup>
+
+</Project>

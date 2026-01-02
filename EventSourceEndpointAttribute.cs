@@ -1,4 +1,4 @@
-namespace EventSourceGen;
+namespace StateleSSE.CodeGen.TypeScript;
 
 /// <summary>
 /// Marks an endpoint as a Server-Sent Events (EventSource) endpoint
