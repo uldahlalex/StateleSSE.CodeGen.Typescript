@@ -12,10 +12,19 @@
     <Authors>Alex</Authors>
     <Description>TypeScript EventSource client generator for StateleSSE. Generates type-safe clients from OpenAPI specs with [EventSourceEndpoint] attributes.</Description>
     <PackageTags>eventsource;sse;openapi;typescript;codegen;stateless;code-generation</PackageTags>
-    <RepositoryUrl>https://github.com/uldahlalex/StateleSSE</RepositoryUrl>
+    <RepositoryUrl>https://github.com/StateleSSE/StateleSSE.CodeGen.Typescript</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RootNamespace>StateleSSE.CodeGen.TypeScript</RootNamespace>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);NSWAG;SWASHBUCKLE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSwag.Generation" Version="14.0.0" PrivateAssets="all" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" PrivateAssets="all" />
+  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="PolySharp" Version="1.14.1">
