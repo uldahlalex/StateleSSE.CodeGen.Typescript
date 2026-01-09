@@ -1,5 +1,13 @@
 # StateleSSE.CodeGen.TypeScript
 
+> **⚠️ DEPRECATED**: This package has been consolidated into `StateleSSE.AspNetCore`.
+>
+> **Migration:** The TypeScript code generator is now included in `StateleSSE.AspNetCore`. All types are now in the `StateleSSE.AspNetCore.CodeGen` namespace. Update your imports and use `StateleSSE.AspNetCore.CodeGen.TypeScriptSseGenerator.Generate()`.
+>
+> This package is no longer maintained and will not receive updates.
+
+---
+
 Generate TypeScript EventSource clients from OpenAPI specifications.
 
 ## Installation

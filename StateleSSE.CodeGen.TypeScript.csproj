@@ -21,9 +21,17 @@
     <DefineConstants>$(DefineConstants);NSWAG;SWASHBUCKLE</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0'">
+    <DefineConstants>$(DefineConstants);MICROSOFT_OPENAPI</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="NSwag.Generation" Version="14.0.0" PrivateAssets="all" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
@@ -31,6 +39,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StateleSSE.Abstractions\StateleSSE.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

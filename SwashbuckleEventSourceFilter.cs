@@ -1,4 +1,5 @@
 using System.Reflection;
+using StateleSSE.Abstractions;
 
 #if SWASHBUCKLE
 using Microsoft.OpenApi.Any;

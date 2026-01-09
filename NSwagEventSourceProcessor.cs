@@ -1,4 +1,5 @@
 using System.Reflection;
+using StateleSSE.Abstractions;
 
 #if NSWAG
 using NSwag.Generation.Processors;
