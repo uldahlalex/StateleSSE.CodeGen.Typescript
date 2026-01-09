@@ -1,21 +1,14 @@
 # StateleSSE.CodeGen.TypeScript
 
-Generate TypeScript EventSource clients from OpenAPI specifications with C# attributes. Part of the StateleSSE ecosystem for type-safe, stateless SSE architectures.
+Generate TypeScript EventSource clients from OpenAPI specifications with C# attributes. 
+
+Part of the StateleSSE ecosystem for type-safe, stateless SSE architectures.
 
 ## Installation
 
 ```bash
 dotnet add package StateleSSE.CodeGen.TypeScript
 ```
-
-## Features
-
-- ✅ **[EventSourceEndpoint] Attribute** - Explicitly mark SSE endpoints in C#
-- ✅ **TypeScript Code Generation** - Auto-generate typed EventSource functions
-- ✅ **OpenAPI Extension** - Adds `x-event-source` and `x-event-type` metadata
-- ✅ **Single Source of Truth** - Types and URLs derived from C# controllers
-- ✅ **Zero Magic Strings** - No hardcoded namespaces or conventions
-- ✅ **Framework Agnostic** - Works with any ASP.NET Core project
 
 ## Quick Start
 
@@ -29,7 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 public class GameEventsController : ControllerBase
 {
     [HttpGet("events/player-joined")]
-    [EventSourceEndpoint(typeof(PlayerJoinedEvent))]  // ← Mark SSE endpoint
+    [EventSourceEndpoint(typeof(PlayerJoinedEvent))]  // ← Mark SSE endpoint WITH return type
     public async Task StreamPlayerJoined([FromQuery] string gameId)
     {
         // ... SSE implementation
@@ -45,17 +38,13 @@ using StateleSSE.CodeGen.TypeScript;
 // In Program.cs, after NSwag generation
 var app = builder.Build();
 
-// Generate OpenAPI spec
-app.GenerateApiClientsFromOpenApi("/../../client/src/generated-client.ts")
-   .GetAwaiter()
-   .GetResult();
-
 // Generate EventSource clients
 TypeScriptSseGenerator.Generate(
-    openApiSpecPath: Path.Combine(Directory.GetCurrentDirectory(), "openapi-with-docs.json"),
+    openApiSpecPath: "openapi.json"), //whatever path / url to the OpenAPI / Swagger json
     outputPath: Path.Combine(Directory.GetCurrentDirectory(), "../../client/src/generated-sse-client.ts")
 );
 
+//I just invoke the source generator before starting the API, but that's just me
 await app.RunAsync();
 ```
 
@@ -66,7 +55,7 @@ import { streamPlayerJoined } from './generated-sse-client';
 import type { PlayerJoinedEvent } from './generated-client';
 
 const es = streamPlayerJoined('game-123');
-es.onmessage = (e) => {
+es.onmessage = (e) => { //in TS it actually knows the e DTO type here
     const event: PlayerJoinedEvent = JSON.parse(e.data);
     console.log('Player joined:', event.playerName);
 };

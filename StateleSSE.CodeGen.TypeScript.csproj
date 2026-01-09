@@ -12,7 +12,7 @@
     <Authors>Alex</Authors>
     <Description>TypeScript EventSource client generator for StateleSSE. Generates type-safe clients from OpenAPI specs with [EventSourceEndpoint] attributes.</Description>
     <PackageTags>eventsource;sse;openapi;typescript;codegen;stateless;code-generation</PackageTags>
-    <RepositoryUrl>https://github.com/yourusername/StateleSSE</RepositoryUrl>
+    <RepositoryUrl>https://github.com/uldahlalex/StateleSSE</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RootNamespace>StateleSSE.CodeGen.TypeScript</RootNamespace>
   </PropertyGroup>
